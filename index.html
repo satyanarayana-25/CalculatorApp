@@ -1,0 +1,268 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modern Calculator</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #141e30, #243b55);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.calculator {
+    width: 340px;
+    padding: 25px;
+    background: #1e293b;
+    border-radius: 25px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+}
+
+h2 {
+    color: white;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#display {
+    width: 100%;
+    height: 75px;
+    background: #0f172a;
+    color: white;
+    border: none;
+    outline: none;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    padding: 15px;
+    font-size: 30px;
+    text-align: right;
+}
+
+.buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+button {
+    height: 60px;
+    border: none;
+    border-radius: 12px;
+    font-size: 21px;
+    font-weight: bold;
+    cursor: pointer;
+    color: white;
+    background: #334155;
+    transition: 0.2s;
+}
+
+button:hover {
+    background: #475569;
+    transform: scale(1.04);
+}
+
+.operator {
+    background: #6366f1;
+}
+
+.operator:hover {
+    background: #4f46e5;
+}
+
+.clear {
+    background: #ef4444;
+}
+
+.clear:hover {
+    background: #dc2626;
+}
+
+.equal {
+    background: #16a34a;
+    grid-column: span 2;
+}
+
+.equal:hover {
+    background: #15803d;
+}
+
+.footer {
+    color: #94a3b8;
+    text-align: center;
+    margin-top: 20px;
+    font-size: 12px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="calculator">
+
+    <h2>🧮 Calculator</h2>
+
+    <input type="text" id="display"
+           placeholder="0" readonly>
+
+    <div class="buttons">
+
+        <button class="clear" onclick="clearDisplay()">AC</button>
+        <button onclick="deleteLast()">DEL</button>
+        <button onclick="percentage()">%</button>
+        <button class="operator" onclick="appendValue('/')">÷</button>
+
+        <button onclick="appendValue('7')">7</button>
+        <button onclick="appendValue('8')">8</button>
+        <button onclick="appendValue('9')">9</button>
+        <button class="operator" onclick="appendValue('*')">×</button>
+
+        <button onclick="appendValue('4')">4</button>
+        <button onclick="appendValue('5')">5</button>
+        <button onclick="appendValue('6')">6</button>
+        <button class="operator" onclick="appendValue('-')">−</button>
+
+        <button onclick="appendValue('1')">1</button>
+        <button onclick="appendValue('2')">2</button>
+        <button onclick="appendValue('3')">3</button>
+        <button class="operator" onclick="appendValue('+')">+</button>
+
+        <button onclick="toggleSign()">+/-</button>
+        <button onclick="appendValue('0')">0</button>
+        <button onclick="appendValue('.')">.</button>
+        <button class="equal" onclick="calculate()">=</button>
+
+    </div>
+
+    <div class="footer">
+        Modern Calculator | HTML CSS JavaScript
+    </div>
+
+</div>
+
+<script>
+
+const display = document.getElementById("display");
+
+function appendValue(value) {
+    if (display.value === "Error") display.value = "";
+
+    const operators = ["+", "-", "*", "/"];
+    const current = display.value;
+
+    if (operators.includes(value)) {
+        if (!current) {
+            if (value === "-") display.value = "-";
+            return;
+        }
+
+        if (operators.includes(current.slice(-1))) {
+            display.value = current.slice(0, -1) + value;
+            return;
+        }
+    }
+
+    if (value === ".") {
+        const lastNumber = current.split(/[+\-*/]/).pop();
+        if (lastNumber.includes(".")) return;
+        if (!lastNumber) value = "0.";
+    }
+
+    display.value += value;
+}
+
+function clearDisplay() {
+    display.value = "";
+}
+
+function deleteLast() {
+    display.value = display.value.slice(0, -1);
+}
+
+function percentage() {
+    try {
+        const current = display.value;
+        const match = current.match(/(\d*\.?\d+)$/);
+
+        if (match) {
+            const number = Number(match[0]);
+            const result = number / 100;
+            display.value =
+                current.slice(0, -match[0].length) + result;
+        }
+    } catch {
+        display.value = "Error";
+    }
+}
+
+function toggleSign() {
+    const current = display.value;
+    const match = current.match(/(\d*\.?\d+)$/);
+
+    if (!match) return;
+
+    const number = Number(match[0]);
+    const result = -number;
+
+    display.value =
+        current.slice(0, -match[0].length) + result;
+}
+
+function calculate() {
+    try {
+        const expression = display.value;
+
+        if (!expression ||
+            !/^[0-9+\-*/. ]+$/.test(expression)) {
+            throw new Error("Invalid");
+        }
+
+        const result = Function(
+            '"use strict"; return (' + expression + ')'
+        )();
+
+        if (!Number.isFinite(result)) {
+            throw new Error("Invalid");
+        }
+
+        display.value = Number(result.toPrecision(12)).toString();
+
+    } catch {
+        display.value = "Error";
+    }
+}
+
+// Keyboard support
+document.addEventListener("keydown", function(event) {
+    const key = event.key;
+
+    if (/^[0-9.]$/.test(key)) {
+        appendValue(key);
+    } else if (["+", "-", "*", "/"].includes(key)) {
+        appendValue(key);
+    } else if (key === "Enter" || key === "=") {
+        calculate();
+    } else if (key === "Backspace") {
+        deleteLast();
+    } else if (key === "Escape") {
+        clearDisplay();
+    } else if (key === "%") {
+        percentage();
+    }
+});
+
+</script>
+
+</body>
+</html>
